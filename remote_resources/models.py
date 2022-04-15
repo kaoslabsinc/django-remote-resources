@@ -1,5 +1,7 @@
 from django.db import models
 
+from .querysets import RemoteResourceQuerySet
+
 _KEY_DOES_NOT_EXIST = '# KEY_DOES_NOT_EXIST_xz7r5b'
 
 
@@ -13,6 +15,8 @@ class AbstractRemoteResource(
     remote_data_key_field = None
 
     _json = models.JSONField()
+
+    objects = RemoteResourceQuerySet.as_manager()
 
     @classmethod
     def from_remote_data(cls, item, **kwargs):
