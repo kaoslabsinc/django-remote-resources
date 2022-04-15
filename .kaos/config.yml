@@ -1,0 +1,7 @@
+name: django-remote-resources
+version: 0.0.0
+description: Sync remote API resources to Django models
+
+repo_url: https://github.com/kaoslabsinc/django-remote-resources
+project_url: https://github.com/kaoslabsinc/django-remote-resources
+keywords: django, api, resource, sync

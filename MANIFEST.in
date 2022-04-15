@@ -1,0 +1,9 @@
+include LICENSE
+include README.md
+
+graft docs
+
+graft remote_resources/static
+graft remote_resources/templates
+graft remote_resources/*/static
+graft remote_resources/*/templates
