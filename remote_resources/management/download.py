@@ -5,6 +5,7 @@ class DownloadResourceCommand(BaseCommand):
     model = None
     queryset = None
     accumulate_qs = False
+    download_options = ('max_pages',)
 
     @property
     def _opts(self):
@@ -33,8 +34,11 @@ class DownloadResourceCommand(BaseCommand):
             return self.model.objects.all()
         return self.queryset
 
+    def _pick_options(self, options):
+        return {k: v for k, v in options.items() if k in self.download_options}
+
     def download(self, options):
-        return self.get_queryset().download(**options)
+        return self.get_queryset().download(**self._pick_options(options))
 
     def post_process_page(self, qs):
         return None
@@ -59,3 +63,8 @@ class DownloadResourceCommand(BaseCommand):
 
         self.post_process_all(accum_qs)
         self._write_success_done(total_count=total_count)
+
+
+__all__ = [
+    'DownloadResourceCommand'
+]
