@@ -17,14 +17,17 @@ class RemoteResourceQuerySet(BulkUpdateCreateQuerySet, models.QuerySet):
     def get_remote_data_iterator(self, *args, **kwargs):
         raise NotImplementedError
 
-    def download(self, max_pages=None, *args, **kwargs):
-        iterator = self.get_remote_data_iterator(*args, **kwargs)
-        if max_pages:
-            iterator = islice(iterator, max_pages)
-
+    def _download(self, iterator):
         for data_list in iterator:
             with transaction.atomic():
                 yield self._bulk_update_or_create_helper([
                     self.model.from_remote_data(item)
                     for item in data_list
                 ])
+
+    def download(self, max_pages=None, *args, **kwargs):
+        iterator = self.get_remote_data_iterator(*args, **kwargs)
+        if max_pages:
+            iterator = islice(iterator, max_pages)
+
+        return self._download(iterator)
