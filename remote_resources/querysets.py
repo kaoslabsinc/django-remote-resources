@@ -25,9 +25,12 @@ class RemoteResourceQuerySet(BulkUpdateCreateQuerySet, models.QuerySet):
                     for item in data_list
                 ])
 
-    def download(self, max_pages=None, *args, **kwargs):
-        iterator = self.get_remote_data_iterator(*args, **kwargs)
+    @staticmethod
+    def _limit_iterator(iterator, max_pages):
         if max_pages:
             iterator = islice(iterator, max_pages)
+        return iterator
 
+    def download(self, max_pages=None, *args, **kwargs):
+        iterator = self._limit_iterator(self.get_remote_data_iterator(*args, **kwargs), max_pages)
         return self._download(iterator)
