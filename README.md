@@ -35,7 +35,7 @@ class ResourceMirror(
         'name': 'name',
         'email': 'email',
     }
-    remote_data_key_field = 'id'  # (5)
+    remote_data_key_field = 'id'  # (4)
 ```
 
 ## Development and Testing
