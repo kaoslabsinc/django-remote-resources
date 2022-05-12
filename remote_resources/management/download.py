@@ -37,14 +37,14 @@ class DownloadResourceCommand(BaseCommand):
     def _pick_options(self, options):
         return {k: v for k, v in options.items() if k in self.download_options}
 
-    def download(self, options):
-        return self.get_queryset().download(**self._pick_options(options))
+    def download(self, **kwargs):
+        return self.get_queryset().download(**kwargs)
 
     def post_process_page(self, qs):
-        return None
+        return qs
 
     def post_process_all(self, accum_qs):
-        return None
+        return accum_qs
 
     def add_arguments(self, parser):
         parser.add_argument('--maxpages', type=int, dest='max_pages')
@@ -53,7 +53,7 @@ class DownloadResourceCommand(BaseCommand):
         total_count = 0
         accum_qs = self.get_queryset().none()
 
-        for page, qs in enumerate(self.download(options)):
+        for page, qs in enumerate(self.download(**self._pick_options(options))):
             self._write_success_page_downloaded(qs, page)
             total_count += qs.count()
             if self.accumulate_qs:
