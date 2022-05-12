@@ -7,11 +7,16 @@ from django.db import models, transaction
 class RemoteResourceQuerySet(BulkUpdateCreateQuerySet, models.QuerySet):
     def _bulk_update_or_create_helper(self, obj_list):
         model = self.model
-        key_field = model.remote_to_model_fields_map[model.remote_data_key_field]
+
+        if model.remote_data_key_field is None:
+            key_field = 'pk'
+        else:
+            key_field = model.remote_to_model_fields_map[model.remote_data_key_field]
+
         return self.bulk_update_or_create(obj_list, key_field, [
-            model.remote_to_model_fields_map[field]
-            for field in model.remote_to_model_fields_map.keys()
-            if field != model.remote_data_key_field
+            field
+            for field in model.remote_to_model_fields_map.values()
+            if field != key_field
         ])
 
     def get_remote_data_iterator(self, *args, **kwargs):
