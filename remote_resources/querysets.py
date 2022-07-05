@@ -42,6 +42,32 @@ class RemoteResourceQuerySet(BulkUpdateCreateQuerySet, models.QuerySet):
         return self._download(iterator)
 
 
+class TimeSeriesQuerySetMixin(models.QuerySet):
+    get_latest_by = None
+
+    def _get_earliest_dt(self):
+        try:
+            earliest_obj = self.earliest(self.get_latest_by)
+            return getattr(earliest_obj, self.get_latest_by)
+        except self.model.DoesNotExist:
+            return None
+
+    def _get_latest_dt(self):
+        try:
+            latest_obj = self.latest(self.get_latest_by)
+            return getattr(latest_obj, self.get_latest_by)
+        except self.model.DoesNotExist:
+            return None
+
+    def _get_pull_dt_range(self):
+        """Pull means update from the end (to the latest entry). Like --tail"""
+        return self._get_latest_dt(), None
+
+    def _get_fill_dt_range(self):
+        """Pull means update from the beginning (to the earliest entry)"""
+        return None, self._get_earliest_dt()
+
+
 class HasCachedPropertiesQuerySet(models.QuerySet):
     cached_properties = []
 
