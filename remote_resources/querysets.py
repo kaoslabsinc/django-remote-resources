@@ -2,7 +2,7 @@ from itertools import islice
 
 from building_blocks.models.querysets import BulkUpdateCreateQuerySet
 from django.db import models, transaction
-from django.db.models import F
+from django.db.models import F, Min, Max
 
 
 class RemoteResourceQuerySet(BulkUpdateCreateQuerySet, models.QuerySet):
@@ -95,3 +95,13 @@ class HasCachedPropertiesQuerySet(models.QuerySet):
             field: F(f'_cached_{field}')
             for field in self.cached_properties
         })
+
+
+class PageableQuerySet(models.QuerySet):
+    def paginate(self, limit):
+        min_id = self.aggregate(m=Min('id'))['m']
+        if min_id is None:
+            return self
+        max_id = self.aggregate(m=Max('id'))['m']
+        for i in range(min_id, max_id + 1, limit):
+            yield self.filter(id__gte=i, id__lt=i + limit)
