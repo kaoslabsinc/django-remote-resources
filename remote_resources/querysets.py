@@ -1,7 +1,7 @@
 from building_blocks.models.querysets import BulkUpdateCreateQuerySet
 from django.db import models, transaction
 
-from remote_resources.utils.itertools import _limit_iterator
+from remote_resources.utils.itertools import limit_iterator
 
 
 class RemoteResourceQuerySet(BulkUpdateCreateQuerySet, models.QuerySet):
@@ -31,7 +31,7 @@ class RemoteResourceQuerySet(BulkUpdateCreateQuerySet, models.QuerySet):
                 ])
 
     def download(self, max_pages=None, *args, **kwargs):
-        iterator = _limit_iterator(self.get_remote_data_iterator(*args, **kwargs), max_pages)
+        iterator = limit_iterator(self.get_remote_data_iterator(*args, **kwargs), max_pages)
         return self._download(iterator)
 
 
