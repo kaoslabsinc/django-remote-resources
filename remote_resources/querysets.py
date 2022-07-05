@@ -40,21 +40,24 @@ class RemoteResourceQuerySet(BulkUpdateCreateQuerySet, models.QuerySet):
 
 
 class TimeSeriesQuerySetMixin(models.QuerySet):
-    get_latest_by = None
+    get_latest_by_field = None
+
+    def _get_get_latest_by_field(self):
+        return self.get_latest_by_field or self.model._meta.get_latest_by
+
+    def _get_dt_helper(self, qs_method):
+        get_latest_by_field = self._get_get_latest_by_field()
+        try:
+            obj = qs_method(self, get_latest_by_field)
+            return getattr(obj, get_latest_by_field)
+        except self.model.DoesNotExist:
+            return None
 
     def _get_earliest_dt(self):
-        try:
-            earliest_obj = self.earliest(self.get_latest_by)
-            return getattr(earliest_obj, self.get_latest_by)
-        except self.model.DoesNotExist:
-            return None
+        return self._get_dt_helper(self.earliest)
 
     def _get_latest_dt(self):
-        try:
-            latest_obj = self.latest(self.get_latest_by)
-            return getattr(latest_obj, self.get_latest_by)
-        except self.model.DoesNotExist:
-            return None
+        return self._get_dt_helper(self.latest)
 
 
 class AscTimeSeriesRemoteResource(TimeSeriesQuerySetMixin, RemoteResourceQuerySet):
