@@ -1,8 +1,7 @@
-from itertools import islice
-
 from building_blocks.models.querysets import BulkUpdateCreateQuerySet
 from django.db import models, transaction
-from django.db.models import F, Min, Max
+
+from remote_resources.utils.itertools import _limit_iterator
 
 
 class RemoteResourceQuerySet(BulkUpdateCreateQuerySet, models.QuerySet):
@@ -31,14 +30,8 @@ class RemoteResourceQuerySet(BulkUpdateCreateQuerySet, models.QuerySet):
                     for item in data_list
                 ])
 
-    @staticmethod
-    def _limit_iterator(iterator, max_pages):
-        if max_pages:
-            iterator = islice(iterator, max_pages)
-        return iterator
-
     def download(self, max_pages=None, *args, **kwargs):
-        iterator = self._limit_iterator(self.get_remote_data_iterator(*args, **kwargs), max_pages)
+        iterator = _limit_iterator(self.get_remote_data_iterator(*args, **kwargs), max_pages)
         return self._download(iterator)
 
 
@@ -68,40 +61,5 @@ class TimeSeriesQuerySetMixin(models.QuerySet):
         return None, self._get_earliest_dt()
 
 
-class HasCachedPropertiesQuerySet(models.QuerySet):
-    cached_properties = []
-
-    def _flush_cache(self):
-        return self.update(**{
-            f'_cached_{field}': None
-            for field in self.cached_properties
-        })
-
-    def _refresh_annotations(self):
-        raise NotImplementedError
-
-    def _update_cache(self):
-        return self.update(**{
-            f'_cached_{field}': F(field)
-            for field in self.cached_properties
-        })
-
-    def refresh(self):
-        self._flush_cache()
-        return self._refresh_annotations()._update_cache()
-
-    def ready(self):
-        return self.annotate(**{
-            field: F(f'_cached_{field}')
-            for field in self.cached_properties
-        })
 
 
-class PageableQuerySet(models.QuerySet):
-    def paginate(self, limit):
-        min_id = self.aggregate(m=Min('id'))['m']
-        if min_id is None:
-            return self
-        max_id = self.aggregate(m=Max('id'))['m']
-        for i in range(min_id, max_id + 1, limit):
-            yield self.filter(id__gte=i, id__lt=i + limit)
