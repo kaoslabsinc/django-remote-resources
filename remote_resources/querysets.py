@@ -1,10 +1,14 @@
 from building_blocks.models.querysets import BulkUpdateCreateQuerySet
 from django.db import models, transaction
 
-from remote_resources.utils.itertools import limit_iterator
+from .enums import Ordering
+from .utils.itertools import limit_iterator
 
 
 class RemoteResourceQuerySet(BulkUpdateCreateQuerySet, models.QuerySet):
+    client_cls = None  # ACMEClient
+    list_api_iterator = None  # ACMEClient.list_users
+
     def _bulk_update_or_create_helper(self, obj_list):
         model = self.model
 
@@ -20,7 +24,7 @@ class RemoteResourceQuerySet(BulkUpdateCreateQuerySet, models.QuerySet):
         ])
 
     def get_remote_data_iterator(self, *args, **kwargs):
-        raise NotImplementedError
+        return self.list_api_iterator(self.client_cls(), *args, **kwargs)
 
     def _download(self, iterator):
         for data_list in iterator:
@@ -52,14 +56,34 @@ class TimeSeriesQuerySetMixin(models.QuerySet):
         except self.model.DoesNotExist:
             return None
 
-    def _get_pull_dt_range(self):
-        """Pull means update from the end (to the latest entry). Like --tail"""
-        return self._get_latest_dt(), None
 
-    def _get_fill_dt_range(self):
-        """Pull means update from the beginning (to the earliest entry)"""
-        return None, self._get_earliest_dt()
+class AscTimeSeriesRemoteResource(TimeSeriesQuerySetMixin, RemoteResourceQuerySet):
+    def get_remote_data_iterator(self, refresh=False, *args, **kwargs):
+        if refresh:
+            start_dt, end_dt = None, None
+        else:
+            start_dt, end_dt = self._get_latest_dt(), None
+
+        return super(AscTimeSeriesRemoteResource, self).get_remote_data_iterator(
+            ordering=Ordering.earlier_first,
+            start_dt=start_dt,
+            end_dt=end_dt,
+            *args, **kwargs,
+        )
 
 
+class DescTimeSeriesRemoteResource(TimeSeriesQuerySetMixin, RemoteResourceQuerySet):
+    def get_remote_data_iterator(self, fill=False, refresh=False, *args, **kwargs):
+        if refresh:
+            start_dt, end_dt = None, None
+        elif fill:
+            start_dt, end_dt = None, self._get_earliest_dt()
+        else:
+            start_dt, end_dt = self._get_latest_dt(), None
 
-
+        return super(DescTimeSeriesRemoteResource, self).get_remote_data_iterator(
+            ordering=Ordering.later_first,
+            start_dt=start_dt,
+            end_dt=end_dt,
+            *args, **kwargs,
+        )
