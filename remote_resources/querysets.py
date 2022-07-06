@@ -76,14 +76,14 @@ class TimeSeriesQuerySetMixin(models.QuerySet):
         return self.reverse()._get_earliest_dt()
 
 
-class AscTimeSeriesRemoteResource(TimeSeriesQuerySetMixin, RemoteResourceQuerySet):
+class AscTimeSeriesRemoteResourceQuerySet(TimeSeriesQuerySetMixin, RemoteResourceQuerySet):
     def _get_list_api_iterator(self, refresh=False, *args, **kwargs):
         if refresh:
             start_dt, end_dt = None, None
         else:
             start_dt, end_dt = self._get_latest_dt(), None
 
-        return super(AscTimeSeriesRemoteResource, self)._get_list_api_iterator(
+        return super(AscTimeSeriesRemoteResourceQuerySet, self)._get_list_api_iterator(
             ordering=Ordering.earlier_first,
             start_dt=start_dt,
             end_dt=end_dt,
@@ -91,7 +91,7 @@ class AscTimeSeriesRemoteResource(TimeSeriesQuerySetMixin, RemoteResourceQuerySe
         )
 
 
-class DescTimeSeriesRemoteResource(TimeSeriesQuerySetMixin, RemoteResourceQuerySet):
+class DescTimeSeriesRemoteResourceQuerySet(TimeSeriesQuerySetMixin, RemoteResourceQuerySet):
     def _get_list_api_iterator(self, fill=False, refresh=False, *args, **kwargs):
         if refresh:
             start_dt, end_dt = None, None
@@ -100,7 +100,7 @@ class DescTimeSeriesRemoteResource(TimeSeriesQuerySetMixin, RemoteResourceQueryS
         else:
             start_dt, end_dt = self._get_latest_dt(), None
 
-        return super(DescTimeSeriesRemoteResource, self)._get_list_api_iterator(
+        return super(DescTimeSeriesRemoteResourceQuerySet, self)._get_list_api_iterator(
             ordering=Ordering.later_first,
             start_dt=start_dt,
             end_dt=end_dt,
