@@ -1,4 +1,5 @@
 from abc import ABC
+from typing import Tuple, Any
 
 from django.db import models
 from django.db.models import F
@@ -74,7 +75,7 @@ class HasCachedPropertiesQuerySet(ABC, models.QuerySet):
         """
         return self._refresh_annotations() if fresh else self._load_cache()
 
-    def refresh(self) -> 'HasCachedPropertiesQuerySet':
+    def refresh(self, flush_cache=True) -> tuple['HasCachedPropertiesQuerySet', Any]:
         """
         Flush the cache, refresh the annotations and then update the cache with the new values
 
@@ -83,7 +84,7 @@ class HasCachedPropertiesQuerySet(ABC, models.QuerySet):
         HasCachedPropertiesQuerySet
             A queryset with all property fields annotated from fresh values
         """
-        self._flush_cache()
+        if flush_cache:
+            self._flush_cache()
         annotated_qs = self._refresh_annotations()
-        annotated_qs._update_cache()
-        return annotated_qs
+        return annotated_qs, annotated_qs._update_cache()
