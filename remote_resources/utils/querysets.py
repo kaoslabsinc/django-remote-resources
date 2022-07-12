@@ -7,25 +7,27 @@ class PageableQuerySet(models.QuerySet):
 
     """
 
-    def paginate(self, limit, simple=True):
+    def paginate(self, limit, simple=True, mutating=False):
         """
 
         :param limit:
         :param simple:
+        :param mutating:
         :return:
         """
 
-        paginated_pks = tuple(
-            page.object_list
-            for page in Paginator(
-                self.values_list('pk', flat=True),
-                limit
-            )
-        )
-
         qs = self.model.objects.all() if simple else self
+        pk_values = self.values_list('pk', flat=True)
 
-        while paginated_pks:
-            pks_page = paginated_pks[0]
-            yield qs.filter(pk__in=pks_page)
-            paginated_pks = paginated_pks[1:]
+        if not mutating:
+            for page in Paginator(pk_values, limit):
+                yield qs.filter(pk__in=page.object_list)
+        else:
+            paginated_pks = tuple(
+                page.object_list
+                for page in Paginator(pk_values, limit)
+            )
+            while paginated_pks:
+                pks_page = paginated_pks[0]
+                yield qs.filter(pk__in=pks_page)
+                paginated_pks = paginated_pks[1:]
