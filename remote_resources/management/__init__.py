@@ -1,2 +1,1 @@
-from .download import DownloadResourceCommand
-from .mixins import *
+from .download import *
