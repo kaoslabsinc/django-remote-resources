@@ -1,5 +1,7 @@
 from django.core.management.base import BaseCommand
 
+from remote_resources.management import RefreshableCommandMixin, FillableCommandMixin
+
 
 class DownloadResourceCommand(BaseCommand):
     model = None
@@ -65,6 +67,32 @@ class DownloadResourceCommand(BaseCommand):
         self._write_success_done(total_count=total_count)
 
 
+class DownloadTimeSeriesResourceCommand(RefreshableCommandMixin, DownloadResourceCommand):
+    download_options = (
+        *DownloadResourceCommand.download_options,
+        *RefreshableCommandMixin.download_options,
+    )
+
+
+class DownloadAscTimeSeriesResourceCommand(DownloadTimeSeriesResourceCommand):
+    pass
+
+
+class DownloadDescTimeSeriesResourceCommand(
+    RefreshableCommandMixin,
+    FillableCommandMixin,
+    DownloadResourceCommand
+):
+    download_options = (
+        *DownloadResourceCommand.download_options,
+        *RefreshableCommandMixin.download_options,
+        *FillableCommandMixin.download_options,
+    )
+
+
 __all__ = [
-    'DownloadResourceCommand'
+    'DownloadResourceCommand',
+    'DownloadTimeSeriesResourceCommand',
+    'DownloadAscTimeSeriesResourceCommand',
+    'DownloadDescTimeSeriesResourceCommand'
 ]
