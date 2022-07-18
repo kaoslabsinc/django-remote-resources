@@ -1,6 +1,6 @@
 from django.core.management.base import BaseCommand
 
-from remote_resources.management import RefreshableCommandMixin, FillableCommandMixin
+from .mixins import RefreshableCommandMixin, FillableCommandMixin
 
 
 class DownloadResourceCommand(BaseCommand):
