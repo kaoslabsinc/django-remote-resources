@@ -33,7 +33,7 @@ class PageableQuerySet(models.QuerySet):
                 yield qs.filter(pk__in=page.object_list)
         else:
             paginated_pks = tuple(
-                page.object_list
+                tuple(page.object_list)
                 for page in Paginator(pk_values, limit)
             )
             while paginated_pks:
