@@ -8,15 +8,15 @@ class PageableQuerySet(models.QuerySet):
 
     """
 
-    def basic_paginate(self, limit):
-        min_id = self.aggregate(m=Min('id'))['m']
+    def paginate(self, limit):
+        d = self.aggregate(min=Min('id'), max=Max('id'))
+        min_id, max_id = d['min'], d['max']
         if min_id is None:
             return self
-        max_id = self.aggregate(m=Max('id'))['m']
         for i in range(min_id, max_id + 1, limit):
             yield self.filter(id__gte=i, id__lt=i + limit)
 
-    def paginate(self, limit, simple=True, mutating=False):
+    def paginate_dprc(self, limit, simple=True, mutating=False):
         """
 
         :param limit:
