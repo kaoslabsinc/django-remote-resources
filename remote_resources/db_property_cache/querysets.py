@@ -36,10 +36,10 @@ class HasCachedPropertiesQuerySet(ABC, models.QuerySet):
             for field in self.cached_properties
         })
 
-    def _update_cache(self):
+    def _update_cache(self, *args):
         return self.update(**{
             f'_cached_{field}': F(field)
-            for field in self.cached_properties
+            for field in (args or self.cached_properties)
         })
 
     def _load_cache(self):
