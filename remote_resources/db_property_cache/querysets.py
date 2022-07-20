@@ -36,7 +36,7 @@ class HasCachedPropertiesQuerySet(ABC, models.QuerySet):
             for field in self.cached_properties
         })
 
-    def _update_cache(self, *args):
+    def update_cache(self, *args):
         return self.update(**{
             f'_cached_{field}': F(field)
             for field in (args or self.cached_properties)
@@ -87,4 +87,4 @@ class HasCachedPropertiesQuerySet(ABC, models.QuerySet):
         if flush_cache:
             self._flush_cache()
         annotated_qs = self._refresh_annotations()
-        return annotated_qs, annotated_qs._update_cache()
+        return annotated_qs, annotated_qs.update_cache()
