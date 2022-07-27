@@ -24,12 +24,13 @@ class RemoteResource(
 
     @classmethod
     def from_remote_data(cls, item, **kwargs):
+        fields_dict = {
+            model_field: item[remote_field]
+            for remote_field, model_field in cls.remote_to_model_fields_map.items()
+            if remote_field in item
+        }
+        fields_dict.update(kwargs)
         return cls(
             _json=_sanitize_json_for_db(item),
-            **{
-                model_field: item[remote_field]
-                for remote_field, model_field in cls.remote_to_model_fields_map.items()
-                if remote_field in item
-            },
-            **kwargs
+            **fields_dict,
         )
