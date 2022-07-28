@@ -1,6 +1,10 @@
+import logging
+
 from django.core.management.base import BaseCommand
 
 from .mixins import RefreshableCommandMixin, FillableCommandMixin
+
+logger = logging.getLogger()
 
 
 class DownloadResourceCommand(BaseCommand):
@@ -19,9 +23,9 @@ class DownloadResourceCommand(BaseCommand):
     def _write_success(self, message):
         self.stdout.write(self.style.SUCCESS(message))
 
-    def _write_success_page_downloaded(self, qs, page):
+    def _log_success_page_downloaded(self, qs, page):
         count = qs.count()
-        self._write_success(f"({page + 1}) Created or updated {count} {self._opts.verbose_name_plural}")
+        logger.info(f"({page + 1}) Created or updated {count} {self._opts.verbose_name_plural}")
 
     def _write_success_done(self, *args, **kwargs):
         total_count = kwargs['total_count']
@@ -52,7 +56,7 @@ class DownloadResourceCommand(BaseCommand):
         accum_qs = self.get_queryset().none()
 
         for page, qs in enumerate(self.download(**self._pick_options(options))):
-            self._write_success_page_downloaded(qs, page)
+            self._log_success_page_downloaded(qs, page)
             total_count += qs.count()
             accum_qs |= qs
             results = self.post_process_page(qs, page)
