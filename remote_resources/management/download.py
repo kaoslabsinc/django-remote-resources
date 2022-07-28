@@ -27,9 +27,6 @@ class DownloadResourceCommand(BaseCommand):
         total_count = kwargs['total_count']
         self._write_success(f"Created or updated {total_count} {self._opts.verbose_name_plural} in total")
 
-    def _write_success_page_post_processed(self, results, page):
-        pass
-
     def get_queryset(self):
         if self.queryset is None:
             return self.model.objects.all()
@@ -41,7 +38,7 @@ class DownloadResourceCommand(BaseCommand):
     def download(self, **kwargs):
         return self.get_queryset().download(**kwargs)
 
-    def post_process_page(self, qs):
+    def post_process_page(self, qs, page):
         return qs
 
     def post_process_all(self, accum_qs):
@@ -58,8 +55,7 @@ class DownloadResourceCommand(BaseCommand):
             self._write_success_page_downloaded(qs, page)
             total_count += qs.count()
             accum_qs |= qs
-            results = self.post_process_page(qs)
-            self._write_success_page_post_processed(results, page)
+            results = self.post_process_page(qs, page)
 
         self._write_success_done(total_count=total_count)
         self.post_process_all(accum_qs)
