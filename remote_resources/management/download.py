@@ -61,8 +61,8 @@ class DownloadResourceCommand(BaseCommand):
             results = self.post_process_page(qs)
             self._write_success_page_post_processed(results, page)
 
-        self.post_process_all(accum_qs)
         self._write_success_done(total_count=total_count)
+        self.post_process_all(accum_qs)
 
 
 class DownloadTimeSeriesResourceCommand(RefreshableCommandMixin, DownloadResourceCommand):
