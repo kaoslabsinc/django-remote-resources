@@ -6,7 +6,6 @@ from .mixins import RefreshableCommandMixin, FillableCommandMixin
 class DownloadResourceCommand(BaseCommand):
     model = None
     queryset = None
-    accumulate_qs = False
     download_options = ('max_pages',)
 
     @property
@@ -58,8 +57,7 @@ class DownloadResourceCommand(BaseCommand):
         for page, qs in enumerate(self.download(**self._pick_options(options))):
             self._write_success_page_downloaded(qs, page)
             total_count += qs.count()
-            if self.accumulate_qs:
-                accum_qs |= qs
+            accum_qs |= qs
             post_process_qs = self.post_process_page(qs)
             self._write_success_page_post_processed(post_process_qs, page)
 
