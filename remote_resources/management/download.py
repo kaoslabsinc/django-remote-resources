@@ -21,7 +21,7 @@ class DownloadResourceCommand(BaseCommand):
 
     def _write_success_page_downloaded(self, qs, page):
         count = qs.count()
-        self._write_success(f"({page}) Created or updated {count} {self._opts.verbose_name_plural}")
+        self._write_success(f"({page + 1}) Created or updated {count} {self._opts.verbose_name_plural}")
 
     def _write_success_done(self, *args, **kwargs):
         total_count = kwargs['total_count']
@@ -58,8 +58,8 @@ class DownloadResourceCommand(BaseCommand):
             self._write_success_page_downloaded(qs, page)
             total_count += qs.count()
             accum_qs |= qs
-            post_process_qs = self.post_process_page(qs)
-            self._write_success_page_post_processed(post_process_qs, page)
+            results = self.post_process_page(qs)
+            self._write_success_page_post_processed(results, page)
 
         self.post_process_all(accum_qs)
         self._write_success_done(total_count=total_count)
