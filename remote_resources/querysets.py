@@ -78,10 +78,13 @@ class TimeSeriesQuerySetMixin(models.QuerySet):
 
 class AscTimeSeriesRemoteResourceQuerySet(TimeSeriesQuerySetMixin, RemoteResourceQuerySet):
     def _get_list_api_iterator(self, refresh=False, *args, **kwargs):
+        start_dt = kwargs.pop('start_dt', None)
+        end_dt = kwargs.pop('end_dt', None)
+
         if refresh:
-            start_dt, end_dt = None, None
+            start_dt, end_dt = start_dt or None,                    end_dt or None
         else:
-            start_dt, end_dt = self._get_latest_dt(), None
+            start_dt, end_dt = start_dt or self._get_latest_dt(),   end_dt or None
 
         return super(AscTimeSeriesRemoteResourceQuerySet, self)._get_list_api_iterator(
             ordering=Ordering.earlier_first,
@@ -93,12 +96,15 @@ class AscTimeSeriesRemoteResourceQuerySet(TimeSeriesQuerySetMixin, RemoteResourc
 
 class DescTimeSeriesRemoteResourceQuerySet(TimeSeriesQuerySetMixin, RemoteResourceQuerySet):
     def _get_list_api_iterator(self, fill=False, refresh=False, *args, **kwargs):
+        start_dt = kwargs.pop('start_dt', None)
+        end_dt = kwargs.pop('end_dt', None)
+
         if refresh:
-            start_dt, end_dt = None, None
+            start_dt, end_dt = start_dt or None,                    end_dt or None
         elif fill:
-            start_dt, end_dt = None, self._get_earliest_dt()
+            start_dt, end_dt = start_dt or None,                    end_dt or self._get_earliest_dt()
         else:
-            start_dt, end_dt = self._get_latest_dt(), None
+            start_dt, end_dt = start_dt or self._get_latest_dt(),   end_dt or None
 
         return super(DescTimeSeriesRemoteResourceQuerySet, self)._get_list_api_iterator(
             ordering=Ordering.later_first,
