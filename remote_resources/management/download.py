@@ -50,19 +50,24 @@ class DownloadResourceCommand(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument('--maxpages', type=int, dest='max_pages')
+        parser.add_argument('--nopost', action='store_true', dest='no_post')
 
     def handle(self, *args, **options):
         total_count = 0
         accum_qs = self.get_queryset().none()
 
+        should_run_post = not options['no_post']
+
         for page, qs in enumerate(self.download(**self._pick_options(options))):
             self._log_success_page_downloaded(qs, page)
             total_count += qs.count()
             accum_qs |= qs
-            results = self.post_process_page(qs, page)
+            if should_run_post:
+                results = self.post_process_page(qs, page)
 
         self._write_success_done(total_count=total_count)
-        self.post_process_all(accum_qs)
+        if should_run_post:
+            self.post_process_all(accum_qs)
 
 
 class DownloadTimeSeriesResourceCommand(RefreshableCommandMixin, DownloadResourceCommand):
