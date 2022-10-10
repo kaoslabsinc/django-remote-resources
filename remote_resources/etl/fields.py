@@ -23,8 +23,8 @@ class RemoteField:
             if callable(self._extract):
                 return self._extract(raw_obj)
             if isinstance(self._extract, str):
-                return raw_obj[self._extract]
-        return raw_obj[self.name]
+                return raw_obj.get(self._extract, MISSING)
+        return raw_obj.get(self.name, MISSING)
 
     def clean(self, raw_value):
         if self._clean:
