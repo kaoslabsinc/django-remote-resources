@@ -8,6 +8,8 @@ from ..fields import RemoteField
 
 
 class InitFromJsonInterface(ABC):
+    _json: Any
+
     @classmethod
     def from_json(cls, json):
         instance = cls()
@@ -16,7 +18,11 @@ class InitFromJsonInterface(ABC):
 
     @abstractmethod
     def _load_json(self, json) -> None:
-        pass
+        self._json = json
+
+    @property
+    def is_loaded(self):
+        return self._json is not None
 
 
 class InitFromKwargsInterface(ABC):
@@ -49,16 +55,11 @@ class RemoteObjectInterface(
 ):
     remote_client: RemoteClient
     fields: dict[str, RemoteField]
-    _json: Any
 
     @property
     @abstractmethod
     def remote_id(self):
         raise NotImplementedError
-
-    @property
-    def is_loaded(self):
-        return self._json is not None
 
     @property
     def is_local_only(self):

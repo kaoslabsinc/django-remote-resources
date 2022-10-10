@@ -54,7 +54,7 @@ class BaseRemoteObject(
         return False
 
     def _load_json(self, json) -> None:
-        self._json = json
+        super(BaseRemoteObject, self)._load_json(json)
         for field_name, field in self.fields.items():
             cleaned_val = field.etl(json)
             setattr(self, field_name, cleaned_val)
