@@ -7,22 +7,22 @@ from ..clients import RemoteClient
 from ..fields import RemoteField
 
 
-class InitFromJsonInterface(ABC):
-    _json: Any
+class InitFromRawInterface(ABC):
+    _raw: Any
 
     @classmethod
-    def from_json(cls, json):
+    def from_raw(cls, raw_obj):
         instance = cls()
-        instance._load_json(json)
+        instance._load_raw(raw_obj)
         return instance
 
     @abstractmethod
-    def _load_json(self, json) -> None:
-        self._json = json
+    def _load_raw(self, raw) -> None:
+        self._raw = raw
 
     @property
     def is_loaded(self):
-        return self._json is not None
+        return self._raw is not None
 
 
 class InitFromKwargsInterface(ABC):
@@ -50,7 +50,7 @@ class UpdateFromKwargsInterface(ABC):
 
 
 class RemoteObjectInterface(
-    InitFromJsonInterface,
+    InitFromRawInterface,
     InitFromObjInterface,
 ):
     remote_client: RemoteClient
@@ -73,7 +73,7 @@ class RemoteObjectInterface(
 
 
 __all__ = (
-    'InitFromJsonInterface',
+    'InitFromRawInterface',
     'InitFromKwargsInterface',
     'InitFromObjInterface',
     'UpdateFromKwargsInterface',

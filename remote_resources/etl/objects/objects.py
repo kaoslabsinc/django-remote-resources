@@ -39,7 +39,7 @@ class BaseRemoteObject(
     metaclass=BaseRemoteObjectMeta
 ):
     def __init__(self):
-        self._json = None
+        self._raw = None
         self.fields = deepcopy(self.fields)
 
     @property
@@ -53,10 +53,10 @@ class BaseRemoteObject(
                 return True
         return False
 
-    def _load_json(self, json) -> None:
-        super(BaseRemoteObject, self)._load_json(json)
+    def _load_raw(self, raw) -> None:
+        super(BaseRemoteObject, self)._load_raw(raw)
         for field_name, field in self.fields.items():
-            cleaned_val = field.etl(json)
+            cleaned_val = field.etl(raw)
             setattr(self, field_name, cleaned_val)
 
     @classmethod
@@ -93,7 +93,7 @@ class ListRemoteObjectMixin(
     @classmethod
     @abstractmethod
     def list_all(cls, *args, **kwargs) -> Generator['RemoteObject', None, None]:
-        yield from map(cls.from_json, cls._remote_list_all(*args, **kwargs))
+        yield from map(cls.from_raw, cls._remote_list_all(*args, **kwargs))
 
     @classmethod
     def get(cls, *args, **kwargs):
@@ -116,11 +116,11 @@ class RetrieveRemoteObjectMixin(
 ):
     @classmethod
     def retrieve(cls, *args, **kwargs):
-        return cls.from_json(cls.remote_client.retrieve(*args, **kwargs))
+        return cls.from_raw(cls.remote_client.retrieve(*args, **kwargs))
 
     def refresh(self):
         json = self.remote_client.retrieve(self.remote_id)
-        self._load_json(json)
+        self._load_raw(json)
 
 
 class CreateRemoteObjectMixin(
@@ -129,7 +129,7 @@ class CreateRemoteObjectMixin(
     def _create(self):
         args, kwargs = self._get_create_args()
         json = self.remote_client.create(*args, **kwargs)
-        self._load_json(json)
+        self._load_raw(json)
 
     def duplicate(self):
         assert not self.is_local_only
@@ -152,7 +152,7 @@ class UpdateRemoteObjectMixin(
         assert not self.is_local_only and self.is_edited
         args, kwargs = self._get_update_args(fields)
         json = self.remote_client.update(self.remote_id, *args, **kwargs)
-        self._load_json(json)
+        self._load_raw(json)
 
     @abstractmethod
     def _get_update_args(self, fields: Sequence | type(ALL)) -> tuple[Sequence, dict]:
