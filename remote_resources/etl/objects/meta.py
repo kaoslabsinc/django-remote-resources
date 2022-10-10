@@ -11,15 +11,15 @@ class HasRemoteClientMeta(type):
         super(HasRemoteClientMeta, cls).__init__(name, bases, dct)
         cls._remote_client = None
 
-    @property
-    def remote_client(cls):
+    def get_remote_client(cls):
         if cls._remote_client is None:
             cls._remote_client = cls.remote_client_cls()
         return cls._remote_client
 
-    @remote_client.setter
-    def remote_client(cls, new_remote_client: RemoteClient):
+    def set_remote_client(cls, new_remote_client: RemoteClient):
         cls._remote_client = new_remote_client
+
+    remote_client = property(get_remote_client, set_remote_client)
 
 
 class HasRemoteFieldsMeta(type):

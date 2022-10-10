@@ -18,8 +18,10 @@ class BaseRemoteObjectMeta(
 class RemoteObjectInterface(
     InitFromRawInterface,
     InitFromObjInterface,
-    metaclass=BaseRemoteObjectMeta
 ):
+    fields: dict[str: RemoteField]
+    remote_client: RemoteClient
+
     @property
     @abstractmethod
     def remote_id(self):
@@ -37,7 +39,8 @@ class RemoteObjectInterface(
 
 
 class BaseRemoteObject(
-    RemoteObjectInterface, ABC
+    RemoteObjectInterface, ABC,
+    metaclass=BaseRemoteObjectMeta
 ):
     def __init__(self):
         super(BaseRemoteObject, self).__init__()
@@ -87,9 +90,8 @@ class ListRemoteObjectMixin(
         pass
 
     @classmethod
-    @abstractmethod
     def _remote_list_all(cls, *args, **kwargs):
-        raise NotImplementedError
+        return cls.remote_client.list_all(*args, **kwargs)
 
     @classmethod
     @abstractmethod
