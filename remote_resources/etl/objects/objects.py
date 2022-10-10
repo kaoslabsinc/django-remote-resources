@@ -92,7 +92,7 @@ class ListRemoteObjectMixin(
 
     @classmethod
     @abstractmethod
-    def list_all(cls, *args, **kwargs) -> Generator['RemoteObject', None, None]:
+    def list_all(cls, *args, **kwargs) -> Generator['ListRemoteObjectMixin', None, None]:
         yield from map(cls.from_raw, cls._remote_list_all(*args, **kwargs))
 
     @classmethod
