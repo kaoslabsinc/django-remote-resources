@@ -1,7 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Type, Any
-
-from py_kaos_utils.typing import T
+from typing import Any
 
 from ..clients import RemoteClient
 from ..fields import RemoteField
@@ -31,13 +29,13 @@ class InitFromRawInterface(ABC):
 class InitFromKwargsInterface(ABC):
     @classmethod
     @abstractmethod
-    def from_kwargs(cls: Type[T], **kwargs) -> T:
+    def from_kwargs(cls, **kwargs):
         pass
 
 
 class InitFromObjInterface(InitFromKwargsInterface, ABC):
     @classmethod
-    def from_obj(cls: Type[T], obj) -> T:
+    def from_obj(cls, obj):
         return cls.from_kwargs(**cls._obj_to_kwargs(obj))
 
     @classmethod

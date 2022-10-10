@@ -183,7 +183,7 @@ class ListCreateRemoteObjectMixin(
         except cls.MultipleObjectsReturned:
             raise
         except cls.DoesNotExist:
-            instance: ListCreateRemoteObjectMixin = cls.from_kwargs(**kwargs, **defaults)
+            instance = cls.from_kwargs(**kwargs, **defaults)
             instance.create()
         return instance
 
