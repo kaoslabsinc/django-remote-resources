@@ -21,6 +21,7 @@ class RemoteObjectInterface(
 ):
     fields: dict[str: RemoteField]
     remote_client: RemoteClient
+    remote_client_cls: Type[RemoteClient]
 
     @property
     @abstractmethod
