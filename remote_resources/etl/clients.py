@@ -107,5 +107,6 @@ __all__ = (
     'RetrieveRemoteClientMixin',
     'UpdateRemoteClientMixin',
     'DeleteRemoteClientMixin',
+    'RemoteClient',
     'RestAPIRemoteClientMixin',
 )
