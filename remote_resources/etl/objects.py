@@ -1,25 +1,9 @@
 from copy import deepcopy
-from typing import Generator, Sequence, TypeVar, Type
+from typing import Generator, Sequence
 
 from .clients import RemoteClient
 from .consts import ALL, MISSING
 from .fields import RemoteField
-
-ListRemoteObject = TypeVar('ListRemoteObject',
-                           'BaseRemoteObject', 'ListRemoteObjectMixin')
-CreateRemoteObject = TypeVar('CreateRemoteObject',
-                             'BaseRemoteObject', 'CreateRemoteObjectMixin')
-RetrieveRemoteObject = TypeVar('RetrieveRemoteObject',
-                               'BaseRemoteObject', 'RetrieveRemoteObjectMixin')
-UpdateRemoteObject = TypeVar('UpdateRemoteObject',
-                             'BaseRemoteObject', 'UpdateRemoteObjectMixin')
-DeleteRemoteObject = TypeVar('DeleteRemoteObject',
-                             'BaseRemoteObject', 'DeleteRemoteObjectMixin')
-GetOrCreateRemoteObject = TypeVar('GetOrCreateRemoteObject',
-                                  'BaseRemoteObject', 'ListRemoteObjectMixin', 'CreateRemoteObjectMixin')
-UpdateOrCreateRemoteObject = TypeVar('UpdateOrCreateRemoteObject',
-                                     'BaseRemoteObject', 'ListRemoteObjectMixin', 'CreateRemoteObjectMixin',
-                                     'UpdateRemoteObjectMixin')
 
 
 class BaseRemoteObjectMeta(type):
@@ -122,11 +106,11 @@ class ListRemoteObjectMixin:
         raise NotImplementedError
 
     @classmethod
-    def list_all(cls: Type[ListRemoteObject], *args, **kwargs) -> Generator['RemoteObject', None, None]:
+    def list_all(cls, *args, **kwargs) -> Generator['RemoteObject', None, None]:
         yield from map(cls.from_json, cls._remote_list_all(*args, **kwargs))
 
     @classmethod
-    def get(cls: Type[ListRemoteObject], *args, **kwargs):
+    def get(cls, *args, **kwargs):
         list_all_generator = cls.list_all(*args, **kwargs)
         try:
             obj = next(list_all_generator)
@@ -143,25 +127,25 @@ class ListRemoteObjectMixin:
 
 class RetrieveRemoteObjectMixin:
     @classmethod
-    def retrieve(cls: Type[RetrieveRemoteObject], *args, **kwargs):
+    def retrieve(cls, *args, **kwargs):
         return cls.from_json(cls.remote_client.retrieve(*args, **kwargs))
 
-    def refresh(self: RetrieveRemoteObject):
+    def refresh(self):
         json = self.remote_client.retrieve(self.remote_id)
         self._load_json(json)
 
 
 class CreateRemoteObjectMixin:
-    def _create(self: CreateRemoteObject):
+    def _create(self):
         args, kwargs = self._get_create_args()
         json = self.remote_client.create(*args, **kwargs)
         self._load_json(json)
 
-    def duplicate(self: CreateRemoteObject):
+    def duplicate(self):
         assert not self.is_local_only
         self._create()
 
-    def create(self: CreateRemoteObject):
+    def create(self):
         assert self.is_local_only
         self._create()
 
@@ -170,7 +154,7 @@ class CreateRemoteObjectMixin:
 
 
 class UpdateRemoteObjectMixin:
-    def update(self: UpdateRemoteObject, fields: Sequence | type(ALL) = ALL):
+    def update(self, fields: Sequence | type(ALL) = ALL):
         assert not self.is_local_only and self.is_edited
         args, kwargs = self._get_update_args(fields)
         json = self.remote_client.update(self.remote_id, *args, **kwargs)
@@ -181,13 +165,13 @@ class UpdateRemoteObjectMixin:
 
 
 class DeleteRemoteObjectMixin(BaseRemoteObject):
-    def delete(self: DeleteRemoteObject):
+    def delete(self):
         return self.remote_client.delete(self.remote_id)
 
 
 class ListCreateRemoteObjectMixin(ListRemoteObjectMixin, CreateRemoteObjectMixin):
     @classmethod
-    def get_or_create(cls: Type[GetOrCreateRemoteObject], defaults=None, **kwargs):
+    def get_or_create(cls, defaults=None, **kwargs):
         """"""
         try:
             instance = cls.get(**kwargs)
@@ -199,7 +183,7 @@ class ListCreateRemoteObjectMixin(ListRemoteObjectMixin, CreateRemoteObjectMixin
         return instance
 
     @classmethod
-    def update_or_create(cls: Type[UpdateOrCreateRemoteObject], defaults=None, **kwargs):
+    def update_or_create(cls, defaults=None, **kwargs):
         """"""
         try:
             instance: UpdateRemoteObject = cls.get(**kwargs)
