@@ -1,14 +1,18 @@
+from abc import ABCMeta, abstractmethod, ABC
 from copy import deepcopy
-from typing import Generator, Sequence
+from typing import Generator, Sequence, Type
 
-from .clients import RemoteClient
-from .consts import ALL, MISSING
-from .fields import RemoteField
+from .interfaces import RemoteObjectInterface, UpdateFromKwargsInterface
+from ..clients import RemoteClient
+from ..consts import ALL, MISSING
+from ..fields import RemoteField
 
 
-class BaseRemoteObjectMeta(type):
-    def __new__(mcs, classname, bases, classdict, **kwds):
-        cls = super().__new__(mcs, classname, bases, classdict, **kwds)
+class BaseRemoteObjectMeta(ABCMeta):
+    remote_client_cls: Type[RemoteClient]
+
+    def __init__(cls, name, bases, dct):
+        super(BaseRemoteObjectMeta, cls).__init__(name, bases, dct)
 
         cls.fields = {}
         for attr, val in vars(cls).items():
@@ -18,8 +22,6 @@ class BaseRemoteObjectMeta(type):
                 cls.fields[field.name] = field
 
         cls._remote_client = None
-
-        return cls
 
     @property
     def remote_client(cls) -> RemoteClient:
@@ -32,34 +34,17 @@ class BaseRemoteObjectMeta(type):
         cls._remote_client = new_remote_client
 
 
-class BaseRemoteObject(metaclass=BaseRemoteObjectMeta):
-    remote_client_cls: RemoteClient = RemoteClient
-
-    class DoesNotExist(Exception):
-        pass
-
-    class MultipleObjectsReturned(Exception):
-        pass
-
+class BaseRemoteObject(
+    RemoteObjectInterface, ABC,
+    metaclass=BaseRemoteObjectMeta
+):
     def __init__(self):
         self._json = None
         self.fields = deepcopy(self.fields)
 
     @property
-    def is_loaded(self):
-        return self._json is not None
-
-    @property
-    def remote_id(self):
-        raise NotImplementedError
-
-    @property
-    def is_local_only(self):
-        return self.remote_id is None
-
-    @property
     def is_edited(self):
-        if self.is_local_only:
+        if super(BaseRemoteObject, self).is_edited:
             return True
         for field_name, field in self.fields.items():
             if field.value is MISSING:
@@ -67,12 +52,6 @@ class BaseRemoteObject(metaclass=BaseRemoteObjectMeta):
             elif field.value != getattr(self, field_name):
                 return True
         return False
-
-    @classmethod
-    def from_json(cls, json):
-        instance = cls()
-        instance._load_json(json)
-        return instance
 
     def _load_json(self, json) -> None:
         self._json = json
@@ -92,20 +71,27 @@ class BaseRemoteObject(metaclass=BaseRemoteObjectMeta):
         return instance
 
     @classmethod
-    def from_obj(cls, obj):
-        return cls.from_kwargs(**cls._obj_to_kwargs(obj))
-
-    @classmethod
     def _obj_to_kwargs(cls, obj):
-        return {attr: val for attr, val in vars(obj).items() if attr in cls.fields}
+        kwargs = super(BaseRemoteObject, cls)._obj_to_kwargs(obj)
+        return {attr: val for attr, val in kwargs if attr in cls.fields}
 
 
-class ListRemoteObjectMixin:
+class ListRemoteObjectMixin(
+    RemoteObjectInterface, ABC
+):
+    class DoesNotExist(Exception):
+        pass
+
+    class MultipleObjectsReturned(Exception):
+        pass
+
     @classmethod
+    @abstractmethod
     def _remote_list_all(cls, *args, **kwargs):
         raise NotImplementedError
 
     @classmethod
+    @abstractmethod
     def list_all(cls, *args, **kwargs) -> Generator['RemoteObject', None, None]:
         yield from map(cls.from_json, cls._remote_list_all(*args, **kwargs))
 
@@ -125,7 +111,9 @@ class ListRemoteObjectMixin:
                 raise cls.MultipleObjectsReturned("get() returned more than one objects")
 
 
-class RetrieveRemoteObjectMixin:
+class RetrieveRemoteObjectMixin(
+    RemoteObjectInterface, ABC
+):
     @classmethod
     def retrieve(cls, *args, **kwargs):
         return cls.from_json(cls.remote_client.retrieve(*args, **kwargs))
@@ -135,7 +123,9 @@ class RetrieveRemoteObjectMixin:
         self._load_json(json)
 
 
-class CreateRemoteObjectMixin:
+class CreateRemoteObjectMixin(
+    RemoteObjectInterface, ABC
+):
     def _create(self):
         args, kwargs = self._get_create_args()
         json = self.remote_client.create(*args, **kwargs)
@@ -149,27 +139,42 @@ class CreateRemoteObjectMixin:
         assert self.is_local_only
         self._create()
 
+    @abstractmethod
     def _get_create_args(self) -> tuple[Sequence, dict]:
         raise NotImplementedError
 
 
-class UpdateRemoteObjectMixin:
+class UpdateRemoteObjectMixin(
+    UpdateFromKwargsInterface,
+    RemoteObjectInterface, ABC
+):
     def update(self, fields: Sequence | type(ALL) = ALL):
         assert not self.is_local_only and self.is_edited
         args, kwargs = self._get_update_args(fields)
         json = self.remote_client.update(self.remote_id, *args, **kwargs)
         self._load_json(json)
 
+    @abstractmethod
     def _get_update_args(self, fields: Sequence | type(ALL)) -> tuple[Sequence, dict]:
         raise NotImplementedError
 
+    def _update_from_kwargs(self, **kwargs):
+        for key, val in kwargs.items():
+            if key in self.fields:
+                setattr(self, key, val)
 
-class DeleteRemoteObjectMixin(BaseRemoteObject):
+
+class DeleteRemoteObjectMixin(
+    RemoteObjectInterface, ABC
+):
     def delete(self):
         return self.remote_client.delete(self.remote_id)
 
 
-class ListCreateRemoteObjectMixin(ListRemoteObjectMixin, CreateRemoteObjectMixin):
+class ListCreateRemoteObjectMixin(
+    ListRemoteObjectMixin,
+    CreateRemoteObjectMixin, ABC
+):
     @classmethod
     def get_or_create(cls, defaults=None, **kwargs):
         """"""
@@ -178,32 +183,37 @@ class ListCreateRemoteObjectMixin(ListRemoteObjectMixin, CreateRemoteObjectMixin
         except cls.MultipleObjectsReturned:
             raise
         except cls.DoesNotExist:
-            instance: GetOrCreateRemoteObject = cls.from_kwargs(**kwargs, **defaults)
+            instance: ListCreateRemoteObjectMixin = cls.from_kwargs(**kwargs, **defaults)
             instance.create()
         return instance
 
+
+class ListCreateUpdateRemoteObjectMixin(
+    ListRemoteObjectMixin,
+    CreateRemoteObjectMixin,
+    UpdateRemoteObjectMixin, ABC
+):
     @classmethod
     def update_or_create(cls, defaults=None, **kwargs):
         """"""
         try:
-            instance: UpdateRemoteObject = cls.get(**kwargs)
+            instance = cls.get(**kwargs)
         except cls.MultipleObjectsReturned:
             raise
         except cls.DoesNotExist:
             instance = cls.from_kwargs(**kwargs, **defaults)
             instance.create()
         else:
-            instance.update_from_kwargs(**defaults)
+            instance._update_from_kwargs(**defaults)
             instance.update(fields=defaults.keys())
         return instance
 
 
 class RemoteObject(
-    ListCreateRemoteObjectMixin,
+    ListCreateUpdateRemoteObjectMixin,
     RetrieveRemoteObjectMixin,
-    UpdateRemoteObjectMixin,
     DeleteRemoteObjectMixin,
-    BaseRemoteObject
+    BaseRemoteObject, ABC
 ):
     """"""
 
@@ -216,5 +226,6 @@ __all__ = (
     'UpdateRemoteObjectMixin',
     'DeleteRemoteObjectMixin',
     'ListCreateRemoteObjectMixin',
+    'ListCreateUpdateRemoteObjectMixin',
     'RemoteObject',
 )
