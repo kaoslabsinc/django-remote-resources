@@ -2,15 +2,17 @@ from abc import ABCMeta, abstractmethod, ABC
 from copy import deepcopy
 from typing import Generator, Sequence, Type
 
-from .interfaces import RemoteObjectInterface, UpdateFromKwargsInterface
+from .interfaces import *
 from ..clients import RemoteClient
 from ..consts import ALL, MISSING
 from ..fields import RemoteField
 
 
-class BaseRemoteObjectMeta(ABCMeta):
-    remote_client_cls: Type[RemoteClient]
-
+class BaseRemoteObjectMeta(
+    HasRemoteClientInterface,
+    HasFieldsInterface,
+    ABCMeta
+):
     def __init__(cls, name, bases, dct):
         super(BaseRemoteObjectMeta, cls).__init__(name, bases, dct)
 
@@ -23,15 +25,37 @@ class BaseRemoteObjectMeta(ABCMeta):
 
         cls._remote_client = None
 
-    @property
-    def remote_client(cls) -> RemoteClient:
-        if cls._remote_client is None:
-            cls._remote_client = cls.remote_client_cls()
-        return cls._remote_client
+        def _get_remote_client(cls):
+            if cls._remote_client is None:
+                cls._remote_client = cls.remote_client_cls()
+            return cls._remote_client
 
-    @remote_client.setter
-    def remote_client(cls, new_remote_client: RemoteClient):
-        cls._remote_client = new_remote_client
+        def _set_remote_client(cls, new_remote_client: RemoteClient):
+            cls._remote_client = new_remote_client
+
+        cls.remote_client = property(_get_remote_client, _set_remote_client)
+
+
+class RemoteObjectInterface(
+    InitFromRawInterface,
+    InitFromObjInterface,
+    HasRemoteClientInterface,
+    HasFieldsInterface,
+):
+    @property
+    @abstractmethod
+    def remote_id(self):
+        raise NotImplementedError
+
+    @property
+    def is_local_only(self):
+        return self.remote_id is None
+
+    @property
+    @abstractmethod
+    def is_edited(self):
+        if self.is_local_only:
+            return True
 
 
 class BaseRemoteObject(

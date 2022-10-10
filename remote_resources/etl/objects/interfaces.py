@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Any
+from typing import Any, Type
 
 from ..clients import RemoteClient
 from ..fields import RemoteField
@@ -50,27 +50,13 @@ class UpdateFromKwargsInterface(ABC):
                 setattr(self, key, val)
 
 
-class RemoteObjectInterface(
-    InitFromRawInterface,
-    InitFromObjInterface,
-):
+class HasRemoteClientInterface:
+    remote_client_cls: Type[RemoteClient]
     remote_client: RemoteClient
+
+
+class HasFieldsInterface:
     fields: dict[str, RemoteField]
-
-    @property
-    @abstractmethod
-    def remote_id(self):
-        raise NotImplementedError
-
-    @property
-    def is_local_only(self):
-        return self.remote_id is None
-
-    @property
-    @abstractmethod
-    def is_edited(self):
-        if self.is_local_only:
-            return True
 
 
 __all__ = (
@@ -78,5 +64,6 @@ __all__ = (
     'InitFromKwargsInterface',
     'InitFromObjInterface',
     'UpdateFromKwargsInterface',
-    'RemoteObjectInterface',
+    'HasRemoteClientInterface',
+    'HasFieldsInterface',
 )
