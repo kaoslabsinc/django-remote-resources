@@ -1,5 +1,5 @@
 import logging
-from abc import ABC
+from abc import ABC, abstractmethod
 from pprint import pformat
 from typing import Sequence, Generator, Callable, Optional
 
@@ -17,13 +17,15 @@ class BaseRemoteClient(ABC):
     """"""
 
 
-class ListRemoteClientMixin:
+class ListRemoteClientMixin(ABC):
+    @abstractmethod
     def list_all(self, *args, **kwargs) -> Generator[RemoteResult, None, None]:
         _, results, next_pages_call = self.get_list_page(*args, **kwargs)
         yield from results
         if next_pages_call:
             yield from next_pages_call()
 
+    @abstractmethod
     def get_list_page(self, *args, **kwargs) -> tuple[
         RemoteResponse,
         Sequence[RemoteResult],
@@ -32,22 +34,26 @@ class ListRemoteClientMixin:
         raise NotImplementedError
 
 
-class CreateRemoteClientMixin:
+class CreateRemoteClientMixin(ABC):
+    @abstractmethod
     def create(self, *args, **kwargs) -> RemoteResult:
         raise NotImplementedError
 
 
-class RetrieveRemoteClientMixin:
+class RetrieveRemoteClientMixin(ABC):
+    @abstractmethod
     def retrieve(self, remote_id) -> RemoteResult:
         raise NotImplementedError
 
 
-class UpdateRemoteClientMixin:
+class UpdateRemoteClientMixin(ABC):
+    @abstractmethod
     def update(self, remote_id, *args, **kwargs) -> RemoteResult:
         raise NotImplementedError
 
 
-class DeleteRemoteClientMixin:
+class DeleteRemoteClientMixin(ABC):
+    @abstractmethod
     def delete(self, remote_id) -> RemoteResult:
         raise NotImplementedError
 
@@ -63,7 +69,7 @@ class RemoteClient(
     """"""
 
 
-class RestAPIRemoteClientMixin:
+class RestAPIRemoteClientMixin(ABC):
     def __init__(self):
         self._session = self._setup_session()
 
