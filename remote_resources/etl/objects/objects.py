@@ -39,7 +39,7 @@ class BaseRemoteObject(
     metaclass=BaseRemoteObjectMeta
 ):
     def __init__(self):
-        self._raw = None
+        super(BaseRemoteObject, self).__init__()
         self.fields = deepcopy(self.fields)
 
     @property

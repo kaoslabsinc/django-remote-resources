@@ -10,6 +10,9 @@ from ..fields import RemoteField
 class InitFromRawInterface(ABC):
     _raw: Any
 
+    def __init__(self):
+        self._raw = None
+
     @classmethod
     def from_raw(cls, raw_obj):
         instance = cls()
