@@ -38,6 +38,9 @@ class RemoteObjectInterface(
         if self.is_local_only:
             return True
 
+    def __repr__(self):
+        return str(self)
+
 
 class BaseRemoteObject(
     RemoteObjectInterface, ABC,
