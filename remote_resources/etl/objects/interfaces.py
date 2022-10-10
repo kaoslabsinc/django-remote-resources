@@ -1,8 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Any, Type
-
-from ..clients import RemoteClient
-from ..fields import RemoteField
+from typing import Any
 
 
 class InitFromRawInterface(ABC):
@@ -50,20 +47,9 @@ class UpdateFromKwargsInterface(ABC):
                 setattr(self, key, val)
 
 
-class HasRemoteClientInterface:
-    remote_client_cls: Type[RemoteClient]
-    remote_client: RemoteClient
-
-
-class HasFieldsInterface:
-    fields: dict[str, RemoteField]
-
-
 __all__ = (
     'InitFromRawInterface',
     'InitFromKwargsInterface',
     'InitFromObjInterface',
     'UpdateFromKwargsInterface',
-    'HasRemoteClientInterface',
-    'HasFieldsInterface',
 )

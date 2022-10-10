@@ -1,46 +1,24 @@
 from abc import ABCMeta, abstractmethod, ABC
 from copy import deepcopy
-from typing import Generator, Sequence, Type
+from typing import Generator, Sequence
 
 from .interfaces import *
-from ..clients import RemoteClient
+from .meta import *
 from ..consts import ALL, MISSING
-from ..fields import RemoteField
 
 
 class BaseRemoteObjectMeta(
-    HasRemoteClientInterface,
-    HasFieldsInterface,
+    HasRemoteClientMeta,
+    HasRemoteFieldsMeta,
     ABCMeta
 ):
-    def __init__(cls, name, bases, dct):
-        super(BaseRemoteObjectMeta, cls).__init__(name, bases, dct)
-
-        cls.fields = {}
-        for attr, val in vars(cls).items():
-            if isinstance(val, RemoteField):
-                field = val
-                field.name = attr
-                cls.fields[field.name] = field
-
-        cls._remote_client = None
-
-        def _get_remote_client(cls):
-            if cls._remote_client is None:
-                cls._remote_client = cls.remote_client_cls()
-            return cls._remote_client
-
-        def _set_remote_client(cls, new_remote_client: RemoteClient):
-            cls._remote_client = new_remote_client
-
-        cls.remote_client = property(_get_remote_client, _set_remote_client)
+    pass
 
 
 class RemoteObjectInterface(
     InitFromRawInterface,
     InitFromObjInterface,
-    HasRemoteClientInterface,
-    HasFieldsInterface,
+    metaclass=BaseRemoteObjectMeta
 ):
     @property
     @abstractmethod
@@ -59,8 +37,7 @@ class RemoteObjectInterface(
 
 
 class BaseRemoteObject(
-    RemoteObjectInterface, ABC,
-    metaclass=BaseRemoteObjectMeta
+    RemoteObjectInterface, ABC
 ):
     def __init__(self):
         super(BaseRemoteObject, self).__init__()
