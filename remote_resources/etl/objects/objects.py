@@ -46,9 +46,18 @@ class BaseRemoteObject(
     RemoteObjectInterface, ABC,
     metaclass=BaseRemoteObjectMeta
 ):
+    property_fields = ()
+
     def __init__(self):
         super(BaseRemoteObject, self).__init__()
         self.fields = deepcopy(self.fields)
+
+    @property
+    def fields_and_properties(self):
+        return (
+            *self.fields.keys(),
+            *self.property_fields,
+        )
 
     @property
     def is_edited(self):
