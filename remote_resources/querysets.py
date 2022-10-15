@@ -3,7 +3,7 @@ import logging
 from django.db import models
 from py_kaos_utils.pagination import paginate_generator
 
-from remote_resources.consts import SAVE_AND_CONTINUE, SAVE_AND_BREAK
+from remote_resources.consts import SAVE_AND_CONTINUE, SAVE_AND_BREAK, BREAK
 
 logger = logging.getLogger()
 
@@ -23,6 +23,8 @@ class RemoteObjectModelQuerySet(models.QuerySet):
                 objs = self.bulk_create(model.from_remote_obj(obj) for obj in page)
                 logger.info(f"({i + 1}) Saved {len(objs)} {model._meta.verbose_name_plural}")
                 all_objs.extend(objs)
+            if check in {BREAK, SAVE_AND_BREAK}:
+                break
 
         return all_objs
 
