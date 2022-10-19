@@ -1,8 +1,27 @@
 from django.contrib import admin, messages
 
 
+class ProcessedFilter(admin.SimpleListFilter):
+    title = "is processed"
+    parameter_name = 'is_processed'
+
+    def lookups(self, request, model_admin):
+        return [
+            ('yes', "Yes"),
+            ('no', "No"),
+        ]
+
+    def queryset(self, request, queryset):
+        value = self.value()
+        if value == 'yes':
+            return queryset.filter(processed_item__isnull=False)
+        if value == 'no':
+            return queryset.filter(processed_item__isnull=True)
+
+
 class RawItemAdmin(admin.ModelAdmin):
     actions = ('process',)
+    list_filter = (ProcessedFilter,)
 
     @admin.display(boolean=True)
     def is_processed(self, obj):
