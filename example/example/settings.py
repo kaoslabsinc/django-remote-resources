@@ -37,6 +37,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'remote_resources.webclipper',
+    'django_object_actions',
 
     'simple',
 ]
