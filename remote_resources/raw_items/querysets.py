@@ -3,16 +3,24 @@ from django.db.models import Case, Value, When
 
 
 class RawItemQuerySet(models.QuerySet):
+    process_batch_size = 0
+
     def process(self, *args, **kwargs):
-        objs = []
-        processed_items = []
+        processed_raw_items = []
+        count_updated = 0
         for obj in self.all():
             processed_item = obj.process(*args, **kwargs)
             obj.processed_item = processed_item
-            objs.append(obj)
-            processed_items.append(processed_item)
+            processed_raw_items.append(obj)
 
-        return self.bulk_update(objs, ('processed_item',))
+            if len(processed_raw_items) == self.process_batch_size:
+                count_updated += self.bulk_update(processed_raw_items, ('processed_item',))
+                processed_raw_items = []
+
+        if processed_raw_items:
+            count_updated += self.bulk_update(processed_raw_items, ('processed_item',))
+
+        return count_updated
 
     def annotate_is_processed(self):
         return self.annotate(is_processed=Case(
