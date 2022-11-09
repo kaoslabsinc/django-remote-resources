@@ -22,8 +22,9 @@ class ProcessedFilter(admin.SimpleListFilter):
 class RawItemAdmin(admin.ModelAdmin):
     actions = ('process',)
     list_filter = (ProcessedFilter,)
+    readonly_fields = ('is_processed',)
 
-    @admin.display(boolean=True)
+    @admin.display(boolean=True, description="⚙️")
     def is_processed(self, obj):
         return obj.is_processed
 
