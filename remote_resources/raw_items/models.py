@@ -11,7 +11,6 @@ class RawItemInterface:
     source: Any
     processed_item: models.Model | None
 
-    objects = RawItemQuerySet.as_manager()
 
     def process(self, *args, **kwargs):
         raise NotImplementedError
@@ -24,6 +23,8 @@ class AbstractRawItem(
 ):
     class Meta:
         abstract = True
+
+    objects = RawItemQuerySet.as_manager()
 
 
 __all__ = (
