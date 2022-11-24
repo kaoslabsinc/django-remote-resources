@@ -1,4 +1,3 @@
-from django.contrib.contenttypes.fields import GenericForeignKey
 from django.db import models
 from django.db.models import Case, Value, When
 
@@ -7,12 +6,7 @@ class RawItemQuerySet(models.QuerySet):
     process_batch_size = 0
 
     def _bulk_update_processed_item(self, processed_raw_items):
-        if isinstance(self.model.processed_item, GenericForeignKey):
-            bulk_update_fields = ('_pi_content_type', '_pi_object_id')
-        else:
-            bulk_update_fields = ('processed_item',)
-
-        return self.bulk_update(processed_raw_items, bulk_update_fields)
+        return self.bulk_update(processed_raw_items, ('processed_item',))
 
     def process(self, *args, **kwargs):
         processed_raw_items = []
