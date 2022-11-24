@@ -12,7 +12,7 @@ class RawItemQuerySet(models.QuerySet):
         processed_raw_items = []
         count_updated = 0
 
-        for obj in self.all():
+        for obj in self.all().order_by('created'):
             processed_item = obj.process(*args, **kwargs)
             obj.processed_item = processed_item
             processed_raw_items.append(obj)
