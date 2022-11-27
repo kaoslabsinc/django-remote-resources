@@ -1,5 +1,5 @@
 name: django-remote-resources
-version: 0.3.0-a4
+version: 0.3.0-dev6
 description: Sync remote API resources to Django models
 
 repo_url: https://github.com/kaoslabsinc/django-remote-resources
