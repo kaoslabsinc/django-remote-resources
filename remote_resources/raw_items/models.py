@@ -7,10 +7,9 @@ from .querysets import RawItemQuerySet
 
 
 class RawItemInterface:
-    raw: Any
+    _raw: Any
     source: Any
     processed_item: models.Model | None
-
 
     def process(self, *args, **kwargs):
         raise NotImplementedError
