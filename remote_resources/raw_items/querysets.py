@@ -1,4 +1,4 @@
-from django.db import models
+from django.db import models, transaction
 from django.db.models import Case, Value, When
 
 
@@ -18,11 +18,13 @@ class RawItemQuerySet(models.QuerySet):
             processed_raw_items.append(obj)
 
             if len(processed_raw_items) == self.process_batch_size:
-                count_updated += self._bulk_update_processed_item(processed_raw_items)
+                with transaction.atomic():
+                    count_updated += self._bulk_update_processed_item(processed_raw_items)
                 processed_raw_items = []
 
         if processed_raw_items:
-            count_updated += self._bulk_update_processed_item(processed_raw_items)
+            with transaction.atomic():
+                count_updated += self._bulk_update_processed_item(processed_raw_items)
 
         return count_updated
 
