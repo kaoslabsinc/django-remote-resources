@@ -27,11 +27,11 @@ class RawItemQuerySet(models.QuerySet):
             processed_raw_items.append(obj)
 
             if len(processed_raw_items) == self.process_batch_size:
-                commit_batch()
+                count_updated += commit_batch()
                 processed_raw_items = []
 
         if processed_raw_items:
-            commit_batch()
+            count_updated += commit_batch()
 
         return count_updated
 
